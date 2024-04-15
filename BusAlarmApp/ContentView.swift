@@ -225,7 +225,7 @@ struct ContentView: View {
                         hideAllText()
                         showSetReturningTimeText = true
                     }) {
-                        Text("帰りの発着時刻の入力に進む。")
+                        Text("帰りの発着時刻の入力に進む")
                     }
                     .padding()
                     .foregroundColor(.black)
