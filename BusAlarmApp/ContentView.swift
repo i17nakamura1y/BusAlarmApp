@@ -24,13 +24,13 @@ struct ContentView: View {
     
     @State private var showSetGoingTimeText = false
     @State private var showSetReturningTimeText = false
-    @State private var goingDepartureHour: Int = 06
-    @State private var goingDepartureMin: Int = 00
-    @State private var goingArrivalHour: Int = 06
+    @State private var goingDepartureHour: Int = 07
+    @State private var goingDepartureMin: Int = 45
+    @State private var goingArrivalHour: Int = 08
     @State private var goingArrivalMin: Int = 30
-    @State private var returningDepartureHour: Int = 06
-    @State private var returningDepartureMin: Int = 00
-    @State private var returningArrivalHour: Int = 06
+    @State private var returningDepartureHour: Int = 07
+    @State private var returningDepartureMin: Int = 50
+    @State private var returningArrivalHour: Int = 08
     @State private var returningArrivalMin: Int = 30
     @State private var goingTimeArray: [[Int]] = []
     @State private var returningTimeArray: [[Int]] = []
@@ -39,6 +39,8 @@ struct ContentView: View {
     @State private var selectedReturningBuses: [String: [Int]] = [:]
     
     @State private var travelTimeToBusStop: Int = 10
+    
+    @State private var toritsuText = false
     
     let daysOfWeek: [String] = ["月", "火", "水", "木", "金", "土", "日"]
 
@@ -59,6 +61,7 @@ struct ContentView: View {
         showAlarmText = false
         showSetGoingTimeText = false
         showSetReturningTimeText = false
+        toritsuText = false
     }
     
     func calculateTimeUntilNextAlarm() -> (hours: Int, minutes: Int)? {
@@ -82,22 +85,101 @@ struct ContentView: View {
         return Calendar.current.date(byAdding: .hour, value: 1, to: Date())
     }
     
+    func setToritsuTimetable() {
+        departureBusStopName = "南大沢"
+        arrivalBusStopName = "日野"
+        
+        goingTimeArray.append([07, 45, 08, 30])
+        goingTimeArray.append([08, 40, 09, 10])
+        goingTimeArray.append([09, 20, 09, 50])
+        goingTimeArray.append([09, 50, 10, 20])
+        goingTimeArray.append([10, 40, 11, 10])
+        goingTimeArray.append([12, 20, 12, 50])
+        goingTimeArray.append([13, 00, 13, 30])
+        goingTimeArray.append([13, 50, 14, 20])
+        goingTimeArray.append([14, 40, 15, 10])
+        goingTimeArray.append([15, 30, 16, 00])
+        goingTimeArray.append([15, 55, 16, 20])
+        goingTimeArray.append([17, 10, 17, 40])
+        goingTimeArray.append([17, 30, 18, 05])
+        goingTimeArray.append([18, 45, 19, 25])
+        
+        returningTimeArray.append([07, 50, 08, 30])
+        returningTimeArray.append([08, 40, 09, 10])
+        returningTimeArray.append([09, 10, 09, 40])
+        returningTimeArray.append([09, 50, 10, 20])
+        returningTimeArray.append([10, 40, 11, 10])
+        returningTimeArray.append([12, 20, 12, 50])
+        returningTimeArray.append([13, 00, 13, 30])
+        returningTimeArray.append([13, 50, 14, 20])
+        returningTimeArray.append([14, 40, 15, 10])
+        returningTimeArray.append([15, 20, 15, 50])
+        returningTimeArray.append([16, 20, 16, 50])
+        returningTimeArray.append([16, 30, 17, 00])
+        returningTimeArray.append([18, 10, 18, 40])
+        returningTimeArray.append([18, 30, 19, 10])
+
+    }
+    
     var body: some View {
         VStack {
             if showTimetableButton {
                 Button(action: {
                     hideAllButton()
                     hideAllText()
-                    if departureBusStopName == "" || arrivalBusStopName == "" {
-                        showSetTimetableText = true
-                    }
-                    else {
-                        showTimetableText = true
-                    }
+                    toritsuText = true
                 }) {
-                    Text("時刻表")
+                    Text("時刻表の設定")
                 }
                 .buttonStyle(CustomButtonStyle())
+            }
+            
+            if toritsuText {
+                Text ("都立大学キャンパス連絡バスですか？")
+                    .padding()
+                
+                HStack {
+                    Button(action: {
+                        hideAllButton()
+                        hideAllText()
+                        setToritsuTimetable()
+                        showTimetableButton = true
+                        showBusButton = true
+                        showAlarmButton = true
+                    }) {
+                        Text("はい")
+                            .padding()
+                            .foregroundColor(.black)
+                            .background(Color.white)
+                            .cornerRadius(20)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.black, lineWidth: 2)
+                            )
+                    }
+                    
+                    Button(action: {
+                        hideAllButton()
+                        hideAllText()
+                        if departureBusStopName == "" || arrivalBusStopName == "" {
+                            showSetTimetableText = true
+                        }
+                        else {
+                            showTimetableText = true
+                        }
+                    }) {
+                        Text("いいえ")
+                            .padding()
+                            .foregroundColor(.black)
+                            .background(Color.white)
+                            .cornerRadius(20)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.black, lineWidth: 2)
+                            )
+                    }
+                }
+                .padding()
             }
             
             if showSetTimetableText {
@@ -390,7 +472,7 @@ struct ContentView: View {
                         showSelectBusText = true
                     }
                 }) {
-                    Text("バス選択")
+                    Text("バスの選択")
                 }
                 .buttonStyle(CustomButtonStyle())
             }
@@ -405,15 +487,25 @@ struct ContentView: View {
                             // Going Bus Picker
                             Picker(selection: Binding(
                                 get: {
-                                    selectedGoingBuses[day] ?? []
+                                    // Check if there is a selected bus for the current day
+                                    if let selectedBus = selectedGoingBuses[day] {
+                                        // Find the index of the selected bus in the goingTimeArray
+                                        if let index = goingTimeArray.firstIndex(where: { $0 == selectedBus }) {
+                                            return index
+                                        }
+                                    }
+                                    // If no selected bus or index found, return 0 (or any other default index)
+                                    return 0
                                 },
                                 set: { newValue in
-                                    selectedGoingBuses[day] = newValue
+                                    // Set the selected bus for the current day based on the index
+                                    selectedGoingBuses[day] = goingTimeArray[newValue]
                                 }
                             )) {
-                                ForEach(goingTimeArray, id: \.self) { times in
+                                ForEach(goingTimeArray.indices, id: \.self) { index in
+                                    let times = goingTimeArray[index]
                                     Text(formatTime(times))
-                                        .tag(times)
+                                        .tag(index) // Tag with index instead of times
                                 }
                             } label: {
                                 Text("行きのバス選択 (\(day))")
@@ -423,15 +515,21 @@ struct ContentView: View {
                             // Returning Bus Picker
                             Picker(selection: Binding(
                                 get: {
-                                    selectedReturningBuses[day] ?? []
+                                    if let selectedBus = selectedReturningBuses[day] {
+                                        if let index = returningTimeArray.firstIndex(where: { $0 == selectedBus }) {
+                                            return index
+                                        }
+                                    }
+                                    return 0
                                 },
                                 set: { newValue in
-                                    selectedReturningBuses[day] = newValue
+                                    selectedReturningBuses[day] = returningTimeArray[newValue]
                                 }
                             )) {
-                                ForEach(returningTimeArray, id: \.self) { times in
+                                ForEach(returningTimeArray.indices, id: \.self) { index in
+                                    let times = returningTimeArray[index]
                                     Text(formatTime(times))
-                                        .tag(times)
+                                        .tag(index)
                                 }
                             } label: {
                                 Text("帰りのバス選択 (\(day))")
@@ -498,7 +596,7 @@ struct ContentView: View {
                     hideAllText()
                     showSetAlarmText = true
                 }) {
-                    Text("アラーム")
+                    Text("徒歩時間の設定")
                 }
                 .buttonStyle(CustomButtonStyle())
             }
